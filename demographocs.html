@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demographic Selectors</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .selectors-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+    .selector-container {
+      flex: 1 1 calc(25% - 10px); /* Four per row */
+      min-width: 200px;
+      position: relative;
+    }
+    .selector-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      background-color: #f0f0f0;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .selector-options {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      padding: 10px;
+      background-color: #fff;
+      position: absolute;
+      top: 40px;
+      left: 0;
+      right: 0;
+      z-index: 10;
+    }
+    .option-item {
+      padding: 5px;
+      cursor: pointer;
+    }
+    .option-item.selected {
+      background-color: #d0ebff;
+    }
+    .custom-input-container, .custom-demographic-container {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+    }
+    .custom-input-container input, .custom-demographic-container input {
+      flex-grow: 1;
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .custom-input-container button, .custom-demographic-container button {
+      padding: 5px 10px;
+      border: none;
+      background-color: #007bff;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .custom-input-container button:hover, .custom-demographic-container button:hover {
+      background-color: #0056b3;
+    }
+    .selected-options {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #007bff;
+      border-radius: 4px;
+      background-color: #f0f8ff;
+    }
+    .selected-options ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    .selected-options li {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Demographic Selectors</h1>
+
+<div class="custom-demographic-container">
+  <input type="text" id="customCategory" placeholder="Add new demographic category...">
+  <button onclick="addCustomCategory()">Add Category</button>
+</div>
+<br><br>
+
+<div id="selectors"></div>
+
+<h2>Selected Options</h2>
+<div class="selected-options" id="selectedOptions">
+  <p>No options selected.</p>
+</div>
+
+<script>
+const demographicOptions = {
+    'Age': [
+      '0-12 years', '13-17 years', '18-24 years', '25-34 years', '35-44 years',
+      '45-54 years', '55-64 years', '65-74 years', '75+ years'
+    ],
+    'Gender': [
+      'Male', 'Female', 'Non-binary', 'Transgender', 'Gender fluid', 'Genderqueer',
+      'Agender', 'Two-Spirit', 'Prefer not to say', 'Other'
+    ],
+    'Income': [
+      'Under $15,000', '$15,000 - $24,999', '$25,000 - $34,999', '$35,000 - $49,999',
+      '$50,000 - $74,999', '$75,000 - $99,999', '$100,000 - $149,999',
+      '$150,000 - $199,999', '$200,000+'
+    ],
+    'Education': [
+      'Less than High School', 'High School Graduate', 'Some College', 'Trade/Technical School',
+      'Associate Degree', "Bachelor's Degree", "Master's Degree", 'Professional Degree',
+      'Doctorate Degree', 'Vocational Training', 'Certification Programs'
+    ],
+    'Ethnicity': [
+      'Hispanic or Latino', 'Not Hispanic or Latino', 'Mexican', 'Puerto Rican',
+      'Cuban', 'Central American', 'South American', 'Other Hispanic', 'Multiple Hispanic'
+    ],
+    'Marital status': [
+      'Single, never married', 'Married', 'Domestic partnership', 'Civil union',
+      'Divorced', 'Separated', 'Widowed', 'Common law marriage'
+    ],
+    'Location': [
+      'Urban', 'Suburban', 'Rural', 'Region-specific (e.g., Midwest, Northeast)'
+    ],
+    'Occupation': [
+      'Healthcare', 'Technology', 'Education', 'Finance', 'Retail', 'Manufacturing',
+      'Hospitality', 'Government', 'Construction', 'Other'
+    ],
+    'Religion': [
+      'Christianity', 'Islam', 'Hinduism', 'Buddhism', 'Judaism', 'Atheism', 
+      'Agnosticism', 'Other'
+    ],
+    'Language': [
+      'English', 'Spanish', 'Mandarin', 'French', 'German', 'Other'
+    ],
+    'Countries': [
+      'United States', 'Canada', 'United Kingdom', 'China', 'Australia', 'Russia', 'India', 'Pakistan', 'Other'
+    ],
+    'Race': [
+      'White', 'Black or African American', 'Asian', 'Native American', 'Pacific Islander',
+      'Mixed Race', 'Other'
+    ],
+    // 'Age Segmentation': [
+    //   'Children (0-12)', 'Teenagers (13-17)', 'Young Adults (18-24)',
+    //   'Adults (25-54)', 'Seniors (55+)'
+    // ],
+    // 'Household Size': [
+    //   '1 person', '2 people', '3 people', '4 people', '5+ people'
+    // ],
+    // 'Family Status': [
+    //   'Single', 'Couple, no children', 'Couple, with children', 'Single parent',
+    //   'Extended family', 'Other'
+    // ],
+    // 'Jobs': [
+    //   'Full-time', 'Part-time', 'Freelancer', 'Unemployed', 'Student', 'Retired'
+    // ],
+    // 'Digital Behavior': [
+    //   'Heavy Internet User', 'Moderate Internet User', 'Light Internet User',
+    //   'Social Media Active', 'Online Shopper', 'Digital Creator', 'Gaming Enthusiast',
+    //   'Tech Early Adopter'
+    // ],
+    // 'Lifestyle': [
+    //   'Health Conscious', 'Fitness Enthusiast', 'Foodie', 'Traveler', 'Homebody',
+    //   'Outdoor Enthusiast', 'Arts & Culture', 'Sports Fan'
+    // ],
+    // 'Shopping Behavior': [
+    //   'Bargain Hunter', 'Luxury Shopper', 'Online Only', 'In-store Preferred',
+    //   'Brand Loyal', 'Deal Seeker', 'Impulse Buyer', 'Researcher'
+    // ],
+    // 'Media Consumption': [
+    //   'Traditional TV', 'Streaming Services', 'Podcast Listener', 'Radio Listener',
+    //   'Print Media Reader', 'Social Media', 'Gaming', 'Multiple Platforms'
+    // ],
+    // 'Psychographics': [
+    //   'Adventure Seeker', 'Conservative', 'Liberal', 'Environmentally Conscious',
+    //   'Traditional', 'Modern', 'Innovation-focused', 'Value-driven'
+    // ],
+    // 'Mobility Status': [
+    //   'Fully Mobile', 'Limited Mobility', 'Wheelchair User', 'Uses Assistive Devices',
+    //   'No Mobility Issues'
+    // ],
+    // 'Technology Adoption': [
+    //   'Innovator', 'Early Adopter', 'Early Majority', 'Late Majority', 'Laggard'
+    // ],
+    // 'Working Style': [
+    //   'Office Worker', 'Remote Worker', 'Hybrid Worker', 'Field Worker',
+    //   'Flexible Schedule', 'Fixed Schedule'
+    // ],
+    // 'Generation': [
+    //   'Generation Alpha (2013-present)', 'Generation Z (1997-2012)', 
+    //   'Millennials (1981-1996)', 'Generation X (1965-1980)', 'Baby Boomers (1946-1964)',
+    //   'Silent Generation (1928-1945)'
+    // ],
+    // 'Dietary Preferences': [
+    //   'Omnivore', 'Vegetarian', 'Vegan', 'Pescatarian', 'Gluten-Free',
+    //   'Kosher', 'Halal', 'Other Restrictions'
+    // ],
+    // 'Social Class': [
+    //   'Upper Class', 'Upper Middle Class', 'Middle Class', 'Lower Middle Class',
+    //   'Working Class', 'Lower Class'
+    // ],
+    // 'Military Status': [
+    //   'Active Duty', 'Reserve', 'Veteran', 'Military Family', 'No Military Affiliation'
+    // ],
+    // 'Pet Ownership': [
+    //   'Dog Owner', 'Cat Owner', 'Multiple Pets', 'Other Pets', 'No Pets'
+    // ],
+    // 'Living Arrangement': [
+    //   'Lives Alone', 'Lives with Partner', 'Lives with Family', 'Lives with Roommates',
+    //   'Student Housing', 'Assisted Living'
+    // ],
+    // 'Transportation': [
+    //   'Own Car', 'Public Transit', 'Bicycle', 'Walk', 'Ride Share', 'Multiple Modes'
+    // ],
+    // 'Environmental Consciousness': [
+    //   'Highly Eco-conscious', 'Moderately Green', 'Neutral', 'Not Focused on Environment'
+    // ]
+};
+
+
+  const selectedOptions = {};
+  let openDropdown = null;
+
+  document.addEventListener("click", (event) => {
+    if (openDropdown && !openDropdown.contains(event.target)) {
+      openDropdown.style.display = "none";
+      openDropdown = null;
+    }
+  });
+
+  function renderSelectors() {
+    const selectorsContainer = document.getElementById("selectors");
+    selectorsContainer.innerHTML = '';  // Clear existing selectors
+    const categoriesPerRow = 4;
+    let rowContainer;
+
+    Object.keys(demographicOptions).forEach((category, index) => {
+      if (index % categoriesPerRow === 0) {
+        rowContainer = document.createElement("div");
+        rowContainer.className = "selectors-row";
+        selectorsContainer.appendChild(rowContainer);
+      }
+
+      const container = document.createElement("div");
+      container.className = "selector-container";
+
+      const header = document.createElement("div");
+      header.className = "selector-header";
+      header.innerHTML = `<span>${category}</span><i class="fas fa-chevron-down"></i>`;
+      container.appendChild(header);
+
+      const optionsContainer = document.createElement("div");
+      optionsContainer.className = "selector-options";
+      optionsContainer.style.display = "none";
+      demographicOptions[category].forEach(option => {
+        const optionItem = document.createElement("div");
+        optionItem.className = "option-item";
+        optionItem.innerText = option;
+        optionItem.addEventListener("click", () => toggleSelection(optionItem, category));
+        optionsContainer.appendChild(optionItem);
+      });
+
+      const customInputContainer = document.createElement("div");
+      customInputContainer.className = "custom-input-container";
+      const customInput = document.createElement("input");
+      customInput.type = "text";
+      customInput.placeholder = "Add custom option...";
+      const addButton = document.createElement("button");
+      addButton.innerText = "Add";
+      addButton.addEventListener("click", () => addCustomOption(customInput, optionsContainer, category));
+      customInputContainer.appendChild(customInput);
+      customInputContainer.appendChild(addButton);
+
+      optionsContainer.appendChild(customInputContainer);
+      container.appendChild(optionsContainer);
+
+      header.addEventListener("click", (event) => {
+        event.stopPropagation();
+        if (openDropdown && openDropdown !== optionsContainer) {
+          openDropdown.style.display = "none";
+        }
+        optionsContainer.style.display = optionsContainer.style.display === "none" ? "block" : "none";
+        openDropdown = optionsContainer.style.display === "block" ? optionsContainer : null;
+      });
+
+      rowContainer.appendChild(container);
+    });
+  }
+
+  function toggleSelection(optionItem, category) {
+    optionItem.classList.toggle("selected");
+    const optionText = optionItem.innerText;
+
+    if (!selectedOptions[category]) selectedOptions[category] = new Set();
+
+    if (optionItem.classList.contains("selected")) {
+      selectedOptions[category].add(optionText);
+    } else {
+      selectedOptions[category].delete(optionText);
+      if (selectedOptions[category].size === 0) delete selectedOptions[category];
+    }
+    updateSelectedOptions();
+  }
+
+  function addCustomOption(input, optionsContainer, category) {
+    const customValue = input.value.trim();
+    if (!customValue) {
+      alert("Please enter a valid custom option.");
+      return;
+    }
+
+    const optionItem = document.createElement("div");
+    optionItem.className = "option-item selected";
+    optionItem.innerText = `${customValue} (Custom)`;
+    optionItem.addEventListener("click", () => toggleSelection(optionItem, category));
+    optionsContainer.insertBefore(optionItem, optionsContainer.lastChild);
+    toggleSelection(optionItem, category);
+    input.value = "";
+  }
+
+  function addCustomCategory() {
+    const customCategoryInput = document.getElementById("customCategory");
+    const category = customCategoryInput.value.trim();
+    if (!category) {
+      alert("Please enter a valid category name.");
+      return;
+    }
+    if (demographicOptions[category]) {
+      alert("This category already exists.");
+      return;
+    }
+    demographicOptions[category] = [];
+    renderSelectors();
+    customCategoryInput.value = "";
+  }
+
+  function updateSelectedOptions() {
+    const selectedOptionsContainer = document.getElementById("selectedOptions");
+    selectedOptionsContainer.innerHTML = "";
+
+    const list = document.createElement("ul");
+
+    if (Object.keys(selectedOptions).length === 0) {
+      selectedOptionsContainer.innerHTML = "<p>No options selected.</p>";
+      return;
+    }
+
+    Object.entries(selectedOptions).forEach(([category, options]) => {
+      const categoryItem = document.createElement("li");
+      categoryItem.innerHTML = `<strong>${category}:</strong> ${[...options].join(", ")}`;
+      list.appendChild(categoryItem);
+    });
+
+    selectedOptionsContainer.appendChild(list);
+  }
+
+  renderSelectors();
+</script>
+
+</body>
+</html>
